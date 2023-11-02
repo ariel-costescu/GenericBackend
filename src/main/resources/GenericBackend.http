@@ -1,0 +1,17 @@
+# GenericBackend
+
+###
+# @name Login example
+GET localhost:8080/login/100
+
+###
+# @name Login again, same session key
+GET localhost:8080/login/100
+
+###
+# @name Log out
+DELETE localhost:8080/login/100
+
+###
+# @name Log back in, different session key
+GET localhost:8080/login/100

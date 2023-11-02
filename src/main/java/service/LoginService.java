@@ -6,4 +6,6 @@ public interface LoginService {
     boolean isSessionKeyExpired(String sessionKey);
 
     Integer getUserIdForSession(String sessionKey);
+
+    void evictSession(int userId);
 }

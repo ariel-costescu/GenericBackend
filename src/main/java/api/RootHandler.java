@@ -1,4 +1,4 @@
-package handler;
+package api;
 
 import com.sun.net.httpserver.HttpExchange;
 
@@ -9,11 +9,11 @@ import java.util.List;
 
 import static java.lang.System.Logger.Level.ERROR;
 
-public class RootHandler extends Handleable implements HandlerRegistry {
+public class RootHandler extends AbstractHandler implements HandlerRegistry {
 
-    private static final System.Logger LOGGER = System.getLogger("handler.RootHandler");
+    private static final System.Logger LOGGER = System.getLogger("api.RootHandler");
 
-    private final List<Handleable> handlers = new LinkedList<>();
+    private final List<AbstractHandler> handlers = new LinkedList<>();
 
     @Override
     public System.Logger getLogger() {
@@ -25,20 +25,20 @@ public class RootHandler extends Handleable implements HandlerRegistry {
         final String requestMethod = exchange.getRequestMethod();
         final URI requestURI = exchange.getRequestURI();
         boolean handled = false;
-        for (Handleable handler : handlers) {
+        for (AbstractHandler handler : handlers) {
             if (handler.canHandleRequest(requestMethod, requestURI)) {
                 handler.handle(exchange);
                 handled = true;
             }
         }
         if (!handled) {
-            LOGGER.log(ERROR, "Couldn't find a handler for requestURI {0}", requestURI.toString());
+            LOGGER.log(ERROR, "Couldn't find an api for requestURI {0}", requestURI.toString());
             handleBadRequest(exchange);
         }
     }
 
     @Override
-    public void registerHandler(Handleable handler) {
+    public void registerHandler(AbstractHandler handler) {
         handlers.add(handler);
     }
 

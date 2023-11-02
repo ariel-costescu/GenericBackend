@@ -74,6 +74,15 @@ public class LoginServiceImpl implements LoginService {
         return expirationRecord == null ? null : expirationRecord.userId;
     }
 
+    @Override
+    public void evictSession(int userId) {
+        if (sessionKeysByUserId.containsKey(userId)) {
+            String sessionKey = sessionKeysByUserId.get(userId);
+            sessionKeysByUserId.remove(userId);
+            sessionKeysExpiration.remove(sessionKey);
+        }
+    }
+
     private String createNewSessionKey(int userId) {
         final Instant now = Instant.now();
         final String sessionKey = UUID.randomUUID().toString();

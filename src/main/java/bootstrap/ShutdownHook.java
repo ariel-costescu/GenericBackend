@@ -1,7 +1,5 @@
 package bootstrap;
 
-import httpServer.BackendServer;
-
 public class ShutdownHook extends Thread {
     final BackendServer backendServer;
 

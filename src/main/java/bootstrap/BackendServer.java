@@ -1,8 +1,8 @@
-package httpServer;
+package bootstrap;
 
 import com.sun.net.httpserver.HttpServer;
-import handler.LoginHandler;
-import handler.RootHandler;
+import api.LoginHandler;
+import api.RootHandler;
 import service.LoginService;
 import service.LoginServiceImpl;
 
@@ -13,7 +13,7 @@ import static java.lang.System.Logger.Level.INFO;
 
 public class BackendServer {
 
-    private static final System.Logger LOGGER = System.getLogger("httpServer.BackendServer");
+    private static final System.Logger LOGGER = System.getLogger("bootstrap.BackendServer");
 
     private final HttpServer httpServer;
     private final LoginService loginService;

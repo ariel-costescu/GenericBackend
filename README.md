@@ -14,6 +14,6 @@ Some design considerations:
 - in case of high load, the **`<backlog_value>`** param can limit the number of queued requests when all the threads are busy
 - using default value for **`<backlog_value>`**, but allow to be overriden for purpose of load testing and finding the optimal value
 - http routing and message handling is decoupled from business logic
-- all the API logic is contained inside the /handler package and the business logic is contained inside the /service package
+- all the API logic is contained inside the /api package and the business logic is contained inside the /service package
 - most of the classes depend only on interfaces, in order to respect the dependency inversion principle and for ease of testing
 - unit tests are limited to the Service classes, since API testing would be difficult to implement
