@@ -10,7 +10,7 @@ GET localhost:8080/login/100
     client.global.set("auth_token", response.body.toString());
 %}
 
-### Log out example. Will return if the Authorization header is missing
+### Log out example. Will return 401 if the Authorization header is missing
 DELETE localhost:8080/login/100
 
 > {%
