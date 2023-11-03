@@ -1,6 +1,7 @@
-package api;
+package api.handler;
 
 import com.sun.net.httpserver.HttpExchange;
+import service.LoginService;
 
 import java.io.IOException;
 import java.net.URI;
@@ -11,9 +12,13 @@ import static java.lang.System.Logger.Level.ERROR;
 
 public class RootHandler extends AbstractHandler implements HandlerRegistry {
 
-    private static final System.Logger LOGGER = System.getLogger("api.RootHandler");
+    private static final System.Logger LOGGER = System.getLogger("api.handler.RootHandler");
 
     private final List<AbstractHandler> handlers = new LinkedList<>();
+
+    public RootHandler(LoginService loginService) {
+        this.loginService = loginService;
+    }
 
     @Override
     public System.Logger getLogger() {

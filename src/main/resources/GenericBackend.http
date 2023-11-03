@@ -1,17 +1,30 @@
 # GenericBackend
 
-###
-# @name Login example
+### Login example
 GET localhost:8080/login/100
 
-###
-# @name Login again, same session key
-GET localhost:8080/login/100
+> {%
+    client.test("Request executed successfully", function() {
+        client.assert(response.status === 200, "Response status is not 200");
+    });
+    client.global.set("auth_token", response.body.toString());
+%}
 
-###
-# @name Log out
+### Log out example. Will return if the Authorization header is missing
 DELETE localhost:8080/login/100
 
-###
-# @name Log back in, different session key
-GET localhost:8080/login/100
+> {%
+    client.test("Request is unauthorized", function() {
+        client.assert(response.status === 401, "Response status is not 401");
+    });
+%}
+
+### Log out example. Authenticated call using token retrieved from previous call
+DELETE localhost:8080/login/100
+Authorization: Bearer {{auth_token}}
+
+> {%
+    client.test("Request executed successfully", function() {
+        client.assert(response.status === 200, "Response status is not 200");
+    });
+%}

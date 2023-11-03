@@ -1,5 +1,6 @@
-package api;
+package api.handler;
 
+import api.AuthAPI;
 import api.annotation.MethodType;
 import api.annotation.RequestParam;
 import api.annotation.RestMethod;
@@ -9,13 +10,11 @@ import service.LoginService;
 import static java.lang.System.Logger.Level.INFO;
 import static java.lang.System.Logger.Level.WARNING;
 
-public class LoginHandler extends AbstractHandler {
+public class AuthHandler extends AbstractHandler implements AuthAPI {
 
-    private static final System.Logger LOGGER = System.getLogger("api.LoginHandler");
+    private static final System.Logger LOGGER = System.getLogger("api.handler.AuthHandler");
 
-    private final LoginService loginService;
-
-    public LoginHandler(LoginService loginService) {
+    public AuthHandler(LoginService loginService) {
         this.loginService = loginService;
     }
 
@@ -24,7 +23,8 @@ public class LoginHandler extends AbstractHandler {
         return LOGGER;
     }
 
-    @RestMethod(methodType = MethodType.GET, pathPattern = "/login/(?<userId>\\d+)")
+    @Override
+    @RestMethod(methodType = MethodType.GET, pathPattern = "/login/(?<userId>\\d+)", authenticated = false)
     public void login(HttpExchange exchange,
                       @RequestParam(name = "userId") String userIdParam) {
         boolean badRequest = true;
@@ -51,6 +51,7 @@ public class LoginHandler extends AbstractHandler {
         }
     }
 
+    @Override
     @RestMethod(methodType = MethodType.DELETE, pathPattern = "/login/(?<userId>\\d+)")
     public void logout(HttpExchange exchange,
                       @RequestParam(name = "userId") String userIdParam) {

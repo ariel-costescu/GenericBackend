@@ -1,10 +1,10 @@
 package bootstrap;
 
 import com.sun.net.httpserver.HttpServer;
-import api.LoginHandler;
-import api.RootHandler;
+import api.handler.AuthHandler;
+import api.handler.RootHandler;
 import service.LoginService;
-import service.LoginServiceImpl;
+import service.impl.LoginServiceImpl;
 
 import java.util.concurrent.Executor;
 import java.util.concurrent.ScheduledExecutorService;
@@ -41,8 +41,8 @@ public class BackendServer {
     }
 
     private void registerHandlers() {
-        final RootHandler rootHandler = new RootHandler();
+        final RootHandler rootHandler = new RootHandler(loginService);
         httpServer.createContext("/", rootHandler);
-        rootHandler.registerHandler(new LoginHandler(loginService));
+        rootHandler.registerHandler(new AuthHandler(loginService));
     }
 }

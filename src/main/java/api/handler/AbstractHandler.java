@@ -1,10 +1,12 @@
-package api;
+package api.handler;
 
 import api.annotation.MethodType;
 import api.annotation.RequestParam;
 import api.annotation.RestMethod;
+import com.sun.net.httpserver.Headers;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
+import service.LoginService;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -21,6 +23,8 @@ import java.util.regex.Pattern;
 import static java.lang.System.Logger.Level.ERROR;
 
 public abstract class AbstractHandler implements HttpHandler {
+    protected LoginService loginService;
+
     public abstract System.Logger getLogger();
 
     public boolean canHandleRequest(String requestMethod, URI requestURI) {
@@ -52,12 +56,55 @@ public abstract class AbstractHandler implements HttpHandler {
         assert matchingMethod != null;
         RestMethod restMethod = matchingMethod.getAnnotation(RestMethod.class);
         Pattern pathPattern = Pattern.compile(restMethod.pathPattern());
-        Matcher matcher = pathPattern.matcher(requestURI.getPath());
-        if (!matcher.matches()) {
+        Matcher pathMatcher = pathPattern.matcher(requestURI.getPath());
+        if (!pathMatcher.matches()) {
             getLogger().log(ERROR, "Unable to obtain request param: no match found");
             handleBadRequest(exchange);
             return;
         }
+
+        if (restMethod.authenticated()) {
+            if (!checkAuth(exchange)) {
+                handleUnauthorized(exchange);
+                return;
+            }
+        }
+
+        List<Object> requestParams = getRequestParams(exchange, matchingMethod, pathMatcher);
+        if (requestParams == null) return;
+        try {
+            matchingMethod.invoke(this, requestParams.toArray());
+        } catch (IllegalAccessException | InvocationTargetException e) {
+            getLogger().log(ERROR, "Unable to invoke rest method", e);
+            handleInternalServerError(exchange);
+        }
+    }
+
+    private boolean checkAuth(HttpExchange exchange) {
+        Headers requestHeaders = exchange.getRequestHeaders();
+        if (!requestHeaders.containsKey("Authorization")) {
+            getLogger().log(ERROR, "Unable to authenticate: no Authorization header");
+            return false;
+        } else {
+            List<String> authorizationHeader = requestHeaders.get("Authorization");
+            String bearerToken = authorizationHeader.get(0);
+            Pattern bearerPattern = Pattern.compile("Bearer (?<token>[0-9a-f\\-]+)");
+            Matcher bearerMatcher = bearerPattern.matcher(bearerToken);
+            if (!bearerMatcher.matches()) {
+                getLogger().log(ERROR, "Unable to authenticate: bad Authorization header [{0}]", bearerToken);
+                return false;
+            } else {
+                String token = bearerMatcher.group("token");
+                if (loginService.isSessionKeyExpired(token)) {
+                    getLogger().log(ERROR, "Unable to authenticate: expired token [{0}]", token);
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+
+    private List<Object> getRequestParams(HttpExchange exchange, Method matchingMethod, Matcher matcher) {
         List<Object> requestParams = new ArrayList<>();
         requestParams.add(exchange);
         for (Parameter parameter : matchingMethod.getParameters()) {
@@ -70,22 +117,17 @@ public abstract class AbstractHandler implements HttpHandler {
                 } catch (IllegalStateException|IllegalArgumentException e) {
                     getLogger().log(ERROR, "Unable to obtain request param", e);
                     handleInternalServerError(exchange);
-                    return;
+                    return null;
                 }
                 if (paramValue == null) {
                     handleBadRequest(exchange);
-                    return;
+                    return null;
                 } else {
                     requestParams.add(paramValue);
                 }
             }
         }
-        try {
-            matchingMethod.invoke(this, requestParams.toArray());
-        } catch (IllegalAccessException | InvocationTargetException e) {
-            getLogger().log(ERROR, "Unable to invoke rest method", e);
-            handleInternalServerError(exchange);
-        }
+        return requestParams;
     }
 
     protected void respondWithStatusCode(HttpExchange exchange, int statusCode) {

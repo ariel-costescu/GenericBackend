@@ -12,11 +12,16 @@ public @interface RestMethod {
     /**
      * @return Pattern representing the URL path that matches the method
      */
-    String pathPattern() default "";
+    String pathPattern();
 
     /**
      * @return Type of method (GET, POST, PUT, DELETE)
      */
     MethodType methodType();
+
+    /**
+     * @return Whether a session key is required as a request header
+     */
+    boolean authenticated() default true;
 
 }
