@@ -72,21 +72,26 @@ public class ShopHandler extends AbstractHandler implements ShopAPI {
     @RestMethod(methodType = MethodType.POST, pathPattern = "/shop/purchase")
     public void purchaseProduct(HttpExchange exchange, Integer authenticatedUserId) {
         String receipt = getRequestBody(exchange);
-        Product product = shopService.verifyReceipt(receipt);
+        Product product = shopService.verifyReceipt(authenticatedUserId, receipt);
         if (product == null) {
             LOGGER.log(ERROR, "Unable to validate purchase: bad receipt");
             handleBadRequest(exchange);
         } else {
-            shopService.creditGemsAmount(authenticatedUserId, product.gemsAmount());
-            String response = product.productId().toString();
-            sendResponse(exchange, response);
+            Long gemsBalance = shopService.creditGemsAmount(authenticatedUserId, product.gemsAmount());
+            if (gemsBalance == null) {
+                LOGGER.log(ERROR, "Unable to credit gems amount");
+                handleBadRequest(exchange);
+            } else {
+                String response = product.productId().toString();
+                sendResponse(exchange, response);
+            }
         }
     }
 
     @Override
     @RestMethod(methodType = MethodType.GET, pathPattern = "/shop/gems")
     public void getGemsBalance(HttpExchange exchange, Integer authenticatedUserId) {
-        Integer gemsBalance = shopService.getGemsBalance(authenticatedUserId);
+        Long gemsBalance = shopService.getGemsBalance(authenticatedUserId);
         String response = gemsBalance.toString();
         sendResponse(exchange, response);
     }
@@ -99,12 +104,13 @@ public class ShopHandler extends AbstractHandler implements ShopAPI {
         if (gemsAmount == null) {
             handleBadRequest(exchange);
         } else {
-            Integer gemsBalance = shopService.getGemsBalance(authenticatedUserId);
-            if (gemsBalance - gemsAmount < 0) {
-                LOGGER.log(ERROR, "Unable to spend more than available balance {0}", gemsBalance);
+            Long gemsBalance = shopService.debitGemsAmount(authenticatedUserId, gemsAmount);
+            if (gemsBalance == null) {
+                LOGGER.log(ERROR, "Unable to debit gems amount");
                 handleBadRequest(exchange);
             } else {
-                shopService.debitGemsAmount(authenticatedUserId, gemsAmount);
+                String response = gemsBalance.toString();
+                sendResponse(exchange, response);
             }
         }
     }
@@ -151,7 +157,7 @@ public class ShopHandler extends AbstractHandler implements ShopAPI {
             return null;
         } else {
             if (shopService.isProductRegistered(productId)) {
-                LOGGER.log(ERROR, "Product {} is already registered", productId);
+                LOGGER.log(ERROR, "Product {0} is already registered", productId);
                 handleBadRequest(exchange);
                 return null;
             }

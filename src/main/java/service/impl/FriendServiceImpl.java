@@ -27,7 +27,7 @@ public class FriendServiceImpl implements FriendService {
     }
 
     @Override
-    public Integer acceptFriendRequest(Integer authenticatedUserId, Integer friendUserId) {
+    public synchronized Integer acceptFriendRequest(Integer authenticatedUserId, Integer friendUserId) {
         final boolean wasRequestedByFriend = getFriendRequestsReceivedBy(authenticatedUserId).contains(friendUserId);
         if (!wasRequestedByFriend) {
             return null;
@@ -41,24 +41,24 @@ public class FriendServiceImpl implements FriendService {
     }
 
     @Override
-    public Integer declineFriendRequest(Integer authenticatedUserId, Integer friendUserId) {
+    public synchronized Integer declineFriendRequest(Integer authenticatedUserId, Integer friendUserId) {
         getFriendRequestsReceivedBy(authenticatedUserId).remove(friendUserId);
         getFriendRequestSentBy(friendUserId).remove(authenticatedUserId);
         return friendUserId;
     }
 
     @Override
-    public List<Integer> getFriendList(Integer authenticatedUserId) {
+    public synchronized List<Integer> getFriendList(Integer authenticatedUserId) {
         return getFriendListBy(authenticatedUserId).stream().toList();
     }
 
     @Override
-    public List<Integer> getFriendRequestsSent(Integer authenticatedUserId) {
+    public synchronized List<Integer> getFriendRequestsSent(Integer authenticatedUserId) {
         return getFriendRequestSentBy(authenticatedUserId).stream().toList();
     }
 
     @Override
-    public List<Integer> getFriendRequestsReceived(Integer authenticatedUserId) {
+    public synchronized List<Integer> getFriendRequestsReceived(Integer authenticatedUserId) {
         return getFriendRequestsReceivedBy(authenticatedUserId).stream().toList();
     }
 

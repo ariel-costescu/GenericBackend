@@ -148,6 +148,159 @@ Authorization: Bearer {{auth_token_1}}
     });
 %}
 
+### Accept friend request from second user
+POST localhost:8080/friend/accept/200
+Authorization: Bearer {{auth_token_1}}
+
+> {%
+    client.test("Request executed successfully", function() {
+        client.assert(response.status === 200, "Response status is not 200");
+    });
+%}
+
+### Check incoming friend request for first user, shoud be empty
+GET localhost:8080/friend/requests/received
+Authorization: Bearer {{auth_token_1}}
+
+> {%
+    client.test("Request executed successfully", function() {
+        client.assert(response.status === 200, "Response status is not 200");
+        client.assert(response.body === "[]", "Response body is not []")
+    });
+%}
+
+### Check outgoing friend request for second user, shoud be empty
+GET localhost:8080/friend/requests/sent
+Authorization: Bearer {{auth_token_2}}
+
+> {%
+    client.test("Request executed successfully", function() {
+        client.assert(response.status === 200, "Response status is not 200");
+        client.assert(response.body === "[]", "Response body is not []")
+    });
+%}
+
+### Register a product for 100 gems
+POST localhost:8080/shop/product/1000/100
+
+> {%
+    client.test("Request executed successfully", function() {
+        client.assert(response.status === 200, "Response status is not 200");
+        client.assert(response.body === "1000", "Response body is not 1000")
+    });
+%}
+
+### Register a product for 500 gems but using the same productId
+POST localhost:8080/shop/product/1000/500
+
+> {%
+    client.test("Product already registered", function() {
+        client.assert(response.status === 400, "Response status is not 400");
+    });
+%}
+
+### Register a product for 500 gems using a different productId
+POST localhost:8080/shop/product/2000/500
+
+> {%
+    client.test("Request executed successfully", function() {
+        client.assert(response.status === 200, "Response status is not 200");
+        client.assert(response.body === "2000", "Response body is not 2000")
+    });
+%}
+
+### Purchase a 100 gems product
+POST localhost:8080/shop/purchase
+Authorization: Bearer {{auth_token_1}}
+Content-Type: application/json
+
+{"userId": 100, "productId": 1000}
+
+> {%
+    client.test("Request executed successfully", function() {
+        client.assert(response.status === 200, "Response status is not 200");
+    });
+%}
+
+### Purchase a 500 gems product
+POST localhost:8080/shop/purchase
+Authorization: Bearer {{auth_token_1}}
+Content-Type: application/json
+
+{"userId": 100, "productId": 2000}
+
+> {%
+    client.test("Request executed successfully", function() {
+        client.assert(response.status === 200, "Response status is not 200");
+    });
+%}
+
+### Check gems balance
+GET localhost:8080/shop/gems
+Authorization: Bearer {{auth_token_1}}
+
+> {%
+    client.test("Request executed successfully", function() {
+        client.assert(response.status === 200, "Response status is not 200");
+        client.assert(response.body === "600", "Balance is not 600");
+    });
+%}
+
+### Try to spend 1000 gems, should be over current balance
+POST localhost:8080/shop/gems/spend/1000
+Authorization: Bearer {{auth_token_1}}
+
+> {%
+    client.test("Could not debit over existing balance", function() {
+        client.assert(response.status === 400, "Response status is not 400");
+    });
+%}
+
+### Try to spend 400 gems
+POST localhost:8080/shop/gems/spend/400
+Authorization: Bearer {{auth_token_1}}
+
+> {%
+    client.test("Request executed successfully", function() {
+        client.assert(response.status === 200, "Response status is not 200");
+        client.assert(response.body === "200", "Balance is not 200");
+    });
+%}
+
+### Check gems balance again. should be down to 200
+GET localhost:8080/shop/gems
+Authorization: Bearer {{auth_token_1}}
+
+> {%
+    client.test("Request executed successfully", function() {
+        client.assert(response.status === 200, "Response status is not 200");
+        client.assert(response.body === "200", "Balance is not 200");
+    });
+%}
+
+### Spend remaining gems
+POST localhost:8080/shop/gems/spend/200
+Authorization: Bearer {{auth_token_1}}
+
+> {%
+    client.test("Request executed successfully", function() {
+        client.assert(response.status === 200, "Response status is not 200");
+        client.assert(response.body === "0", "Balance is not 0");
+    });
+%}
+
+### Check gems balance again. should be down to 0
+GET localhost:8080/shop/gems
+Authorization: Bearer {{auth_token_1}}
+
+> {%
+    client.test("Request executed successfully", function() {
+        client.assert(response.status === 200, "Response status is not 200");
+        client.assert(response.body === "0", "Balance is not 0");
+    });
+%}
+
+
 ### Unregister first user
 DELETE localhost:8080/user
 Authorization: Bearer {{auth_token_1}}
@@ -171,6 +324,24 @@ Authorization: Bearer {{auth_token_2}}
 ### Unregister third user
 DELETE localhost:8080/user
 Authorization: Bearer {{auth_token_3}}
+
+> {%
+    client.test("Request executed successfully", function() {
+        client.assert(response.status === 200, "Response status is not 200");
+    });
+%}
+
+### Unregister first product
+DELETE localhost:8080/shop/product/1000
+
+> {%
+    client.test("Request executed successfully", function() {
+        client.assert(response.status === 200, "Response status is not 200");
+    });
+%}
+
+### Unregister second product
+DELETE localhost:8080/shop/product/2000
 
 > {%
     client.test("Request executed successfully", function() {

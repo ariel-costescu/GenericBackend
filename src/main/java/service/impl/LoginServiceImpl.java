@@ -73,7 +73,7 @@ public class LoginServiceImpl implements LoginService {
     }
 
     @Override
-    public void evictSession(int userId) {
+    public synchronized void evictSession(int userId) {
         if (sessionKeysByUserId.containsKey(userId)) {
             String sessionKey = sessionKeysByUserId.get(userId);
             sessionKeysByUserId.remove(userId);

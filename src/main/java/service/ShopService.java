@@ -13,11 +13,11 @@ public interface ShopService {
 
     void unregisterProduct(Integer productId);
 
-    ShopAPI.Product verifyReceipt(String receipt);
+    ShopAPI.Product verifyReceipt(Integer authenticatedUserId, String receipt);
 
-    void creditGemsAmount(Integer authenticatedUserId, Integer integer);
+    Long getGemsBalance(Integer authenticatedUserId);
 
-    Integer getGemsBalance(Integer authenticatedUserId);
+    Long creditGemsAmount(Integer authenticatedUserId, Integer gemsAmount);
 
-    void debitGemsAmount(Integer authenticatedUserId, Integer gemsAmount);
+    Long debitGemsAmount(Integer authenticatedUserId, Integer gemsAmount);
 }
