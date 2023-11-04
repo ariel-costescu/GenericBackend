@@ -1,15 +1,18 @@
 package bootstrap;
 
 import api.handler.FriendHandler;
+import api.handler.ShopHandler;
 import api.handler.UserHandler;
 import com.sun.net.httpserver.HttpServer;
 import api.handler.AuthHandler;
 import api.handler.RootHandler;
 import service.FriendService;
 import service.LoginService;
+import service.ShopService;
 import service.UserService;
 import service.impl.FriendServiceImpl;
 import service.impl.LoginServiceImpl;
+import service.impl.ShopServiceImpl;
 import service.impl.UserServiceImpl;
 
 import java.util.concurrent.Executor;
@@ -25,6 +28,7 @@ public class BackendServer {
     private final LoginService loginService;
     private final UserService userService;
     private final FriendService friendService;
+    private final ShopService shopService;
     private final ScheduledExecutorService scheduler;
 
     public BackendServer(HttpServer httpServer,
@@ -35,6 +39,7 @@ public class BackendServer {
         this.userService = new UserServiceImpl();
         this.loginService = new LoginServiceImpl(scheduler);
         this.friendService = new FriendServiceImpl();
+        this.shopService = new ShopServiceImpl();
         registerHandlers();
         this.httpServer.setExecutor(handlerExecutor);
     }
@@ -56,5 +61,6 @@ public class BackendServer {
         rootHandler.registerHandler(new AuthHandler(loginService, userService));
         rootHandler.registerHandler(new UserHandler(loginService, userService));
         rootHandler.registerHandler(new FriendHandler(loginService, userService, friendService));
+        rootHandler.registerHandler(new ShopHandler(loginService, shopService));
     }
 }

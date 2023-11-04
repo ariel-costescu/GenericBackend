@@ -27,4 +27,4 @@ Generic Java backend for a mobile game.
 - all the API logic is contained inside the /api package and the business logic is contained inside the /service package
 - most of the classes depend only on interfaces, in order to respect the dependency inversion principle and for ease of testing
 - unit tests are limited to the Service classes
-- [GenericBackend.http](src/main/resources/GenericBackend.http) contains a few API test for Intellij Idea's Http Client
+- [GenericBackend.http](src/main/resources/GenericBackend.http) contains a few API tests for Intellij Idea's Http Client
