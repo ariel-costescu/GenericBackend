@@ -164,6 +164,10 @@ public abstract class AbstractHandler implements HttpHandler {
         respondWithStatusCode(exchange, 400);
     }
 
+    public void handleNotFoundRequest(HttpExchange exchange) {
+        respondWithStatusCode(exchange, 404);
+    }
+
     public void handleUnauthorized(HttpExchange exchange) {
         respondWithStatusCode(exchange, 401);
     }

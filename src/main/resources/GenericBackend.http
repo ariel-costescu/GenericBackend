@@ -5,12 +5,18 @@ GET localhost:8080/login/100
 
 > {%
     client.test("Bad request, user needs to be registered first", function() {
-        client.assert(response.status === 400, "Response status is not 400");
+        client.assert(response.status === 404, "Response status is not 404");
     });
 %}
 
 ### Registration example.
 POST localhost:8080/user/100
+
+> {%
+    client.test("Request executed successfully", function() {
+        client.assert(response.status === 200, "Response status is not 200");
+    });
+%}
 
 ### Login example
 GET localhost:8080/login/100
@@ -19,7 +25,7 @@ GET localhost:8080/login/100
     client.test("Request executed successfully", function() {
         client.assert(response.status === 200, "Response status is not 200");
     });
-    client.global.set("auth_token", response.body.toString());
+    client.global.set("auth_token_1", response.body.toString());
 %}
 
 ### Log out example. Will return 401 if the Authorization header is missing
@@ -33,7 +39,138 @@ DELETE localhost:8080/login
 
 ### Log out example. Authenticated call using token retrieved from previous call
 DELETE localhost:8080/login
-Authorization: Bearer {{auth_token}}
+Authorization: Bearer {{auth_token_1}}
+
+> {%
+    client.test("Request executed successfully", function() {
+        client.assert(response.status === 200, "Response status is not 200");
+    });
+%}
+
+### Register a second user
+POST localhost:8080/user/200
+
+> {%
+    client.test("Request executed successfully", function() {
+        client.assert(response.status === 200, "Response status is not 200");
+    });
+%}
+
+### Login second user
+GET localhost:8080/login/200
+
+> {%
+    client.test("Request executed successfully", function() {
+        client.assert(response.status === 200, "Response status is not 200");
+    });
+    client.global.set("auth_token_2", response.body.toString());
+%}
+
+### Add a friend request
+POST localhost:8080/friend/request/100
+Authorization: Bearer {{auth_token_2}}
+
+> {%
+    client.test("Request executed successfully", function() {
+        client.assert(response.status === 200, "Response status is not 200");
+        client.assert(response.body === "100", "Response body is not 100")
+    });
+%}
+
+### Check list of sent friend requests
+GET localhost:8080/friend/requests/sent
+Authorization: Bearer {{auth_token_2}}
+
+> {%
+    client.test("Request executed successfully", function() {
+        client.assert(response.status === 200, "Response status is not 200");
+        client.assert(response.body === "[100]", "Response body is not [100]")
+    });
+%}
+
+### Login first user
+GET localhost:8080/login/100
+
+> {%
+    client.test("Request executed successfully", function() {
+        client.assert(response.status === 200, "Response status is not 200");
+    });
+    client.global.set("auth_token_1", response.body.toString());
+%}
+
+### Check list of received friend requests
+GET localhost:8080/friend/requests/received
+Authorization: Bearer {{auth_token_1}}
+
+> {%
+    client.test("Request executed successfully", function() {
+        client.assert(response.status === 200, "Response status is not 200");
+        client.assert(response.body === "[200]", "Response body is not [200]")
+    });
+%}
+
+### Accept friend request from unregistered user
+POST localhost:8080/friend/accept/300
+Authorization: Bearer {{auth_token_1}}
+
+> {%
+    client.test("Accepting request from unregistered user failed as expected", function() {
+        client.assert(response.status === 404, "Response status is not 404");
+    });
+%}
+
+### Register third user
+POST localhost:8080/user/300
+
+> {%
+    client.test("Request executed successfully", function() {
+        client.assert(response.status === 200, "Response status is not 200");
+    });
+%}
+
+### Login third user
+GET localhost:8080/login/300
+
+> {%
+    client.test("Request executed successfully", function() {
+        client.assert(response.status === 200, "Response status is not 200");
+    });
+    client.global.set("auth_token_3", response.body.toString());
+%}
+
+### Accept friend request from user that didn't send a friend request
+POST localhost:8080/friend/accept/300
+Authorization: Bearer {{auth_token_1}}
+
+> {%
+    client.test("Accepting request from wrong user failed as expected", function() {
+        client.assert(response.status === 400, "Response status is not 400");
+    });
+%}
+
+### Unregister first user
+DELETE localhost:8080/user
+Authorization: Bearer {{auth_token_1}}
+
+> {%
+    client.test("Request executed successfully", function() {
+        client.assert(response.status === 200, "Response status is not 200");
+    });
+%}
+
+### Unregister second user
+DELETE localhost:8080/user
+Authorization: Bearer {{auth_token_2}}
+
+> {%
+    client.test("Request executed successfully", function() {
+        client.assert(response.status === 200, "Response status is not 200");
+    });
+%}
+
+### Unregister third user
+DELETE localhost:8080/user
+Authorization: Bearer {{auth_token_3}}
 
 > {%
     client.test("Request executed successfully", function() {
