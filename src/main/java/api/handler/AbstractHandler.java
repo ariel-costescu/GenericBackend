@@ -48,6 +48,16 @@ public abstract class AbstractHandler implements HttpHandler {
         return null;
     }
 
+    protected Integer getUserIdFromRequestParam(String userIdParam) {
+        Integer userId = null;
+        try {
+            userId = Integer.parseInt(userIdParam);
+        } catch (NumberFormatException e) {
+            getLogger().log(ERROR, "Unable to parse userId from path param {0}", userIdParam);
+        }
+        return userId;
+    }
+
     @Override
     public void handle(HttpExchange exchange) throws IOException {
         String requestMethod = exchange.getRequestMethod();
@@ -63,14 +73,16 @@ public abstract class AbstractHandler implements HttpHandler {
             return;
         }
 
+        Integer authenticatedUserId = null;
         if (restMethod.authenticated()) {
-            if (!checkAuth(exchange)) {
+            authenticatedUserId = getAuthenticatedUserId(exchange);
+            if (authenticatedUserId == null) {
                 handleUnauthorized(exchange);
                 return;
             }
         }
 
-        List<Object> requestParams = getRequestParams(exchange, matchingMethod, pathMatcher);
+        List<Object> requestParams = getRequestParams(exchange, authenticatedUserId, matchingMethod, pathMatcher);
         if (requestParams == null) return;
         try {
             matchingMethod.invoke(this, requestParams.toArray());
@@ -80,11 +92,11 @@ public abstract class AbstractHandler implements HttpHandler {
         }
     }
 
-    private boolean checkAuth(HttpExchange exchange) {
+    private Integer getAuthenticatedUserId(HttpExchange exchange) {
         Headers requestHeaders = exchange.getRequestHeaders();
         if (!requestHeaders.containsKey("Authorization")) {
             getLogger().log(ERROR, "Unable to authenticate: no Authorization header");
-            return false;
+            return null;
         } else {
             List<String> authorizationHeader = requestHeaders.get("Authorization");
             String bearerToken = authorizationHeader.get(0);
@@ -92,21 +104,25 @@ public abstract class AbstractHandler implements HttpHandler {
             Matcher bearerMatcher = bearerPattern.matcher(bearerToken);
             if (!bearerMatcher.matches()) {
                 getLogger().log(ERROR, "Unable to authenticate: bad Authorization header [{0}]", bearerToken);
-                return false;
+                return null;
             } else {
                 String token = bearerMatcher.group("token");
                 if (loginService.isSessionKeyExpired(token)) {
                     getLogger().log(ERROR, "Unable to authenticate: expired token [{0}]", token);
-                    return false;
+                    return null;
+                } else {
+                    return loginService.getUserIdForSession(token);
                 }
             }
         }
-        return true;
     }
 
-    private List<Object> getRequestParams(HttpExchange exchange, Method matchingMethod, Matcher matcher) {
+    private List<Object> getRequestParams(HttpExchange exchange, Integer authenticatedUserId, Method matchingMethod, Matcher matcher) {
         List<Object> requestParams = new ArrayList<>();
         requestParams.add(exchange);
+        if (authenticatedUserId != null) {
+            requestParams.add(authenticatedUserId);
+        }
         for (Parameter parameter : matchingMethod.getParameters()) {
             if (parameter.isAnnotationPresent(RequestParam.class)) {
                 RequestParam requestParam = parameter.getAnnotation(RequestParam.class);

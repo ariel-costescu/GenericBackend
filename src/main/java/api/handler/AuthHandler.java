@@ -6,16 +6,19 @@ import api.annotation.RequestParam;
 import api.annotation.RestMethod;
 import com.sun.net.httpserver.HttpExchange;
 import service.LoginService;
+import service.UserService;
 
+import static java.lang.System.Logger.Level.ERROR;
 import static java.lang.System.Logger.Level.INFO;
-import static java.lang.System.Logger.Level.WARNING;
 
 public class AuthHandler extends AbstractHandler implements AuthAPI {
 
     private static final System.Logger LOGGER = System.getLogger("api.handler.AuthHandler");
+    private final UserService userService;
 
-    public AuthHandler(LoginService loginService) {
+    public AuthHandler(LoginService loginService, UserService userService) {
         this.loginService = loginService;
+        this.userService = userService;
     }
 
     @Override
@@ -30,18 +33,17 @@ public class AuthHandler extends AbstractHandler implements AuthAPI {
         boolean badRequest = true;
 
         if (userIdParam != null) {
-            Integer userId = null;
-            try {
-                userId = Integer.parseInt(userIdParam);
-            } catch (NumberFormatException e) {
-                LOGGER.log(WARNING, "Unable to parse userId from path param {0}", userIdParam);
-            }
+            Integer userId = getUserIdFromRequestParam(userIdParam);
             if (userId != null) {
-                String response = loginService.getSessionKey(userId);
-                if (response != null) {
-                    badRequest = false;
-                    sendResponse(exchange, response);
-                    LOGGER.log(INFO, "UserId {0} logged in with session key {1}", userId, response);
+                if (!userService.isUserRegistered(userId)) {
+                    LOGGER.log(ERROR, "User {0} is not registered", userId);
+                } else {
+                    String response = loginService.getSessionKey(userId);
+                    if (response != null) {
+                        badRequest = false;
+                        sendResponse(exchange, response);
+                        LOGGER.log(INFO, "UserId {0} logged in with session key {1}", userId, response);
+                    }
                 }
             }
         }
@@ -52,28 +54,10 @@ public class AuthHandler extends AbstractHandler implements AuthAPI {
     }
 
     @Override
-    @RestMethod(methodType = MethodType.DELETE, pathPattern = "/login/(?<userId>\\d+)")
-    public void logout(HttpExchange exchange,
-                      @RequestParam(name = "userId") String userIdParam) {
-        boolean badRequest = true;
-
-        if (userIdParam != null) {
-            Integer userId = null;
-            try {
-                userId = Integer.parseInt(userIdParam);
-            } catch (NumberFormatException e) {
-                LOGGER.log(WARNING, "Unable to parse userId from path param {0}", userIdParam);
-            }
-            if (userId != null) {
-                badRequest = false;
-                loginService.evictSession(userId);
-                respondWithStatusCode(exchange, 200);
-                LOGGER.log(INFO, "UserId {0} logged out", userId);
-            }
-        }
-
-        if (badRequest) {
-            handleBadRequest(exchange);
-        }
+    @RestMethod(methodType = MethodType.DELETE, pathPattern = "/login")
+    public void logout(HttpExchange exchange, Integer authenticatedUserId) {
+        loginService.evictSession(authenticatedUserId);
+        respondWithStatusCode(exchange, 200);
+        LOGGER.log(INFO, "UserId {0} logged out", authenticatedUserId);
     }
 }

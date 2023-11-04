@@ -1,10 +1,13 @@
 package bootstrap;
 
+import api.handler.UserHandler;
 import com.sun.net.httpserver.HttpServer;
 import api.handler.AuthHandler;
 import api.handler.RootHandler;
 import service.LoginService;
+import service.UserService;
 import service.impl.LoginServiceImpl;
+import service.impl.UserServiceImpl;
 
 import java.util.concurrent.Executor;
 import java.util.concurrent.ScheduledExecutorService;
@@ -17,6 +20,7 @@ public class BackendServer {
 
     private final HttpServer httpServer;
     private final LoginService loginService;
+    private final UserService userService;
     private final ScheduledExecutorService scheduler;
 
     public BackendServer(HttpServer httpServer,
@@ -24,6 +28,7 @@ public class BackendServer {
                          ScheduledExecutorService scheduler) {
         this.httpServer = httpServer;
         this.scheduler = scheduler;
+        this.userService = new UserServiceImpl();
         this.loginService = new LoginServiceImpl(scheduler);
         registerHandlers();
         this.httpServer.setExecutor(handlerExecutor);
@@ -43,6 +48,7 @@ public class BackendServer {
     private void registerHandlers() {
         final RootHandler rootHandler = new RootHandler(loginService);
         httpServer.createContext("/", rootHandler);
-        rootHandler.registerHandler(new AuthHandler(loginService));
+        rootHandler.registerHandler(new AuthHandler(loginService, userService));
+        rootHandler.registerHandler(new UserHandler(loginService, userService));
     }
 }

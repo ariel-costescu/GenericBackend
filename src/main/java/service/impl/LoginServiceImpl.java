@@ -4,7 +4,11 @@ import service.LoginService;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
-import java.util.*;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
@@ -13,15 +17,7 @@ public class LoginServiceImpl implements LoginService {
     public static final int DEFAULT_SESSION_EXPIRATION_MINUTES = 10;
     public static final int DEFAULT_PRUNE_SCHEDULE_MINUTES = 15;
 
-    private static class ExpirationRecord {
-        final Instant expiration;
-        final int userId;
-
-        public ExpirationRecord(Instant expiration, int userId) {
-            this.expiration = expiration;
-            this.userId = userId;
-        }
-    }
+    private record ExpirationRecord(Instant expiration, int userId) {}
 
     private final ScheduledExecutorService pruningScheduler;
     private final Map<Integer, String> sessionKeysByUserId = new HashMap<>();

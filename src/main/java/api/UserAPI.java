@@ -11,7 +11,6 @@ public interface UserAPI {
     void registerUser(HttpExchange exchange,
                       @RequestParam(name = "userId") String userIdParam);
 
-    @RestMethod(methodType = MethodType.DELETE, pathPattern = "/user/(?<userId>\\d+)")
-    void unregisterUser(HttpExchange exchange,
-                        @RequestParam(name = "userId") String userIdParam);
+    @RestMethod(methodType = MethodType.DELETE, pathPattern = "/user")
+    void unregisterUser(HttpExchange exchange, Integer authenticatedUserId);
 }

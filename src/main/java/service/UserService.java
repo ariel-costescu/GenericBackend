@@ -5,5 +5,5 @@ public interface UserService {
 
     boolean isUserRegistered(int userId);
 
-    void unRegisterUser(int userId);
+    void unregisterUser(int userId);
 }

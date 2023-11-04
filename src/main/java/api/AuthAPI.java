@@ -16,10 +16,8 @@ public interface AuthAPI {
                @RequestParam(name = "userId") String userIdParam);
 
     /**
-     * Logs out an existing user, if they are registered.
-     * If the user is registered, otherwise response code is 404
+     * Logs out an existing user that is authenticated
      */
-    @RestMethod(methodType = MethodType.DELETE, pathPattern = "/auth/(?<userId>\\d+)")
-    void logout(HttpExchange exchange,
-                @RequestParam(name = "userId") String userIdParam);
+    @RestMethod(methodType = MethodType.DELETE, pathPattern = "/auth")
+    void logout(HttpExchange exchange, Integer authenticatedUserId);
 }
