@@ -38,6 +38,7 @@ public class AuthHandler extends AbstractHandler implements AuthAPI {
                 if (!userService.isUserRegistered(userId)) {
                     LOGGER.log(ERROR, "User {0} is not registered", userId);
                     handleNotFoundRequest(exchange);
+                    return;
                 } else {
                     String response = loginService.getSessionKey(userId);
                     if (response != null) {
