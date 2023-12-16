@@ -5,7 +5,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import service.impl.LoginServiceImpl;
-import service.impl.UserServiceImpl;
 
 import java.time.temporal.ChronoUnit;
 import java.util.Random;
@@ -26,14 +25,12 @@ class LoginServiceTest {
     Random random;
 
     LoginService loginService;
-    UserService userService;
     ScheduledExecutorService scheduler;
 
     @BeforeEach
     void setUp() {
         random = new Random();
         scheduler = Executors.newScheduledThreadPool(1);
-        userService = new UserServiceImpl();
         loginService = new LoginServiceImpl(
                 sessionKeyExpirationAmount, sessionKeyExpirationUnit,
                 scheduler,
