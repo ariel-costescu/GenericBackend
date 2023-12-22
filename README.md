@@ -2,7 +2,7 @@
 Generic Java backend for a mobile game.
 
 ## Overview
-- compiled for Java 17
+- compiled for Java 21
 - no external dependencies except jUnit for unit testing
 - implemented as REST APIs with no disk persistence, all data is stored on the heap
 - based on com.sun.net.httpserver.HttpServer included in the JDK
